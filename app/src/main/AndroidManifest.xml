@@ -16,6 +16,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TransparentWidget">
 
+        <!-- ドック用透明ショートカット -->
+        <activity
+            android:name=".ShortcutActivity"
+            android:label=" "
+            android:icon="@drawable/ic_transparent"
+            android:roundIcon="@drawable/ic_transparent_192"
+            android:exported="true"
+            android:noHistory="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.TransparentWidget">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <!-- ウィジェット設定アクティビティ -->
         <activity
             android:name=".ConfigActivity"
