@@ -20,8 +20,8 @@
         <activity
             android:name=".ShortcutActivity"
             android:label=" "
-            android:icon="@drawable/ic_transparent"
-            android:roundIcon="@drawable/ic_transparent_192"
+            android:icon="@drawable/ic_invisible"
+            android:roundIcon="@drawable/ic_invisible"
             android:exported="true"
             android:noHistory="false"
             android:excludeFromRecents="true"

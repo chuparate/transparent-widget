@@ -1,31 +1,35 @@
 package com.example.transparentwidget
 
-import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class ShortcutActivity : AppCompatActivity() {
 
+    companion object {
+        const val EXTRA_TARGET_PACKAGE = "target_package"
+    }
+
     private val allApps = mutableListOf<AppInfo>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val prefs = getSharedPreferences(TransparentWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE)
-        val packageName = prefs.getString("shortcut_target", null)
-
-        if (packageName != null) {
-            packageManager.getLaunchIntentForPackage(packageName)?.let { intent ->
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-                startActivity(intent)
+        val targetPackage = intent.getStringExtra(EXTRA_TARGET_PACKAGE)
+        if (targetPackage != null) {
+            packageManager.getLaunchIntentForPackage(targetPackage)?.let { launchIntent ->
+                launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                startActivity(launchIntent)
             }
             overridePendingTransition(0, 0)
             finish()
@@ -39,9 +43,7 @@ class ShortcutActivity : AppCompatActivity() {
         recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
 
         val adapter = AppListAdapter(emptyList()) { appInfo ->
-            prefs.edit().putString("shortcut_target", appInfo.packageName).apply()
-            Toast.makeText(this, "設定完了！ドックにこのアイコンを配置してください", Toast.LENGTH_LONG).show()
-            finish()
+            createPinnedShortcut(appInfo.packageName)
         }
         recyclerView.adapter = adapter
 
@@ -64,5 +66,23 @@ class ShortcutActivity : AppCompatActivity() {
             allApps.addAll(apps)
             runOnUiThread { adapter.updateList(apps) }
         }.start()
+    }
+
+    private fun createPinnedShortcut(packageName: String) {
+        val transparentBitmap = Bitmap.createBitmap(108, 108, Bitmap.Config.ARGB_8888)
+
+        val launchIntent = Intent(this, ShortcutActivity::class.java).apply {
+            action = Intent.ACTION_VIEW
+            putExtra(EXTRA_TARGET_PACKAGE, packageName)
+        }
+
+        val shortcut = ShortcutInfoCompat.Builder(this, "shortcut_${packageName}_${System.currentTimeMillis()}")
+            .setShortLabel(" ")
+            .setIcon(IconCompat.createWithBitmap(transparentBitmap))
+            .setIntent(launchIntent)
+            .build()
+
+        ShortcutManagerCompat.requestPinShortcut(this, shortcut, null)
+        finish()
     }
 }
